@@ -1,6 +1,7 @@
 package com.geekbrains.chat.client;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -15,6 +16,9 @@ public class ChatMain extends Application {
         stage.setTitle("Chat Client");
         stage.setScene(scene);
         stage.show();
+    }
+    public void stopCh() {
+
     }
 
     public static void main(String[] args) {

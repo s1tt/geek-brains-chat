@@ -1,6 +1,6 @@
 package com.geekbrains.chat.client;
 
-import javafx.event.ActionEvent;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextArea;
@@ -34,6 +34,10 @@ public class ChatController implements Initializable {
                     try {
                         while (true) {
                             String inputMessage = in.readUTF();
+                            if ("/end".equalsIgnoreCase(inputMessage)) {
+                                Platform.exit();
+                                break;
+                            }
                             chatArea.appendText(inputMessage + "\n");
                         }
                     } catch (IOException e) {
@@ -42,7 +46,7 @@ public class ChatController implements Initializable {
             });
             readThread.start();
         } catch (IOException e) {
-            System.out.println("Не возможно подключиться к серверу");
+            System.out.println("Невозможно подключиться к серверу");
             System.exit(0);
         }
     }
