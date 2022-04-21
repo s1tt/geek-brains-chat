@@ -2,14 +2,12 @@ package com.geekbrains.chat.client;
 
 import java.util.Optional;
 
+import com.geekbrains.chat.Command;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 
 public class Controller {
@@ -26,6 +24,8 @@ public class Controller {
     private TextField textField;
     @FXML
     private TextArea textArea;
+    @FXML
+    private ListView<String> clientList;
 
     private final ChatClient client;
 
@@ -56,16 +56,15 @@ public class Controller {
     }
 
     public void btnAuthClick(ActionEvent actionEvent) {
-        client.sendMessage("/auth " + loginField.getText() + " " + passwordField.getText());
+        client.sendMessage(Command.AUTH, loginField.getText(), passwordField.getText());
     }
 
     public void setAuth(boolean success) {
         loginBox.setVisible(!success);
         messageBox.setVisible(success);
-        textArea.setVisible(success);
     }
 
-    public void showNotification() {
+    private void showNotification() {
         final Alert alert = new Alert(Alert.AlertType.ERROR,
                 "Не могу подключится к серверу.\n" +
                         "Проверьте, что сервер запущен",
@@ -77,5 +76,26 @@ public class Controller {
         if (isExit) {
             System.exit(0);
         }
+    }
+
+    public void showError(String[] error) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, error[0], new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
+        alert.setTitle("Ошибка");
+        alert.showAndWait();
+    }
+
+    public void selectClient(MouseEvent mouseEvent) {
+        if (mouseEvent.getClickCount() == 2) {
+            String message = textField.getText();
+            String nick = clientList.getSelectionModel().getSelectedItem();
+            textField.setText(Command.PRIVATE_MESSAGE.collectMessage(nick, message));
+            textField.requestFocus();
+            textField.selectEnd();
+        }
+    }
+
+    public void updateClientList(String[] params) {
+        clientList.getItems().clear();
+        clientList.getItems().addAll(params);
     }
 }

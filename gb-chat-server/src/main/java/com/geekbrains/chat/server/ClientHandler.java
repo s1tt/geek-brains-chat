@@ -1,5 +1,7 @@
 package com.geekbrains.chat.server;
 
+import com.geekbrains.chat.Command;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -39,7 +41,7 @@ public class ClientHandler {
     }
 
     private void closeConnection() {
-        sendMessage("/end");
+        sendMessage(Command.END);
         try {
             if (in != null) {
                 in.close();
@@ -68,32 +70,38 @@ public class ClientHandler {
         while (true) {
             try {
                 final String str = in.readUTF();
-                if (str.startsWith("/auth")) {
-                    final String[] split = str.split(" ");
-                    final String login = split[1];
-                    final String password = split[2];
-                    final String nick = authService.getNickByLoginAndPassword(login, password);
-                    if (nick != null) {
-                        if (server.isNickBusy(nick)) {
-                            sendMessage("Пользователь уже авторизован");
-                            continue;
+                if (Command.isCommand(str)) {
+                    final Command command = Command.getCommand(str);
+                    final String[] params = command.parse(str);
+                    if (command == Command.AUTH) {
+                        final String login = params[0];
+                        final String password = params[1];
+                        final String nick = authService.getNickByLoginAndPassword(login, password);
+                        if (nick != null) {
+                            if (server.isNickBusy(nick)) {
+                                sendMessage(Command.ERROR, "Пользователь уже авторизован");
+                                continue;
+                            }
+                            sendMessage(Command.AUTHOK, nick);
+                            this.nick = nick;
+                            server.broadcast("Пользователь " + nick + " зашел в чат");
+                            server.subscribe(this);
+                            break;
+                        } else {
+                            sendMessage(Command.ERROR, "Неверные логин и пароль");
                         }
-                        sendMessage("/authok " + nick);
-                        this.nick = nick;
-                        server.broadcast("Пользователь " + nick + " зашел в чат");
-                        server.subscribe(this);
-                        break;
-                    } else {
-                        sendMessage("Неверные логин и пароль");
-                        System.out.print("Неверные логин и пароль");
-
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                break;
             }
 
         }
+    }
+
+    public void sendMessage(Command command, String... params) {
+        sendMessage(command.collectMessage(params));
     }
 
     public void sendMessage(String message) {
@@ -110,24 +118,25 @@ public class ClientHandler {
             while (true) {
                 final String msg = in.readUTF();
                 System.out.println("Receive message: " + msg);
-                if (msg.startsWith("/")) {
-                    if ("/end".equals(msg)) {
-                        server.broadcast(nick + ": покинул чат");
-                        break;
+                    if (Command.isCommand(msg)) {
+                        Command command = Command.getCommand(msg);
+                        String[] params = command.parse(msg);
+                        if (command == Command.END) {
+                            server.broadcast(nick + ": покинул чат");
+                            break;
+                        }
+
+                        if (command == Command.PRIVATE_MESSAGE) {
+                            server.sendMsgToClient(this, params[0], params[1]);
+                            continue;
+                        }
                     }
-                    if (msg.startsWith("/w ")) {
-                        String[] tokens = msg.split("\\s");
-                        String nick = tokens[1];
-                        String str = msg.substring(4 + nick.length());
-                        server.sendMsgToClient(this, nick, str);
-                    }
-                    continue;
-                }
                 server.broadcast(nick + ": " + msg);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     public String getNick() {
