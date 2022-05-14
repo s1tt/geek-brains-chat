@@ -6,11 +6,23 @@
 
     <groupId>org.example</groupId>
     <artifactId>geek-brains-chat</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>gb-chat-client</module>
+        <module>gb-chat-server</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>dev.klepto.commands</groupId>
+            <artifactId>commands</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+    </dependencies>
 
 </project>

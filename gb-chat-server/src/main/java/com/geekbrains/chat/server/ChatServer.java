@@ -1,10 +1,13 @@
 package com.geekbrains.chat.server;
 
+import com.geekbrains.chat.Command;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ChatServer {
 
@@ -28,16 +31,14 @@ public class ChatServer {
         }
     }
 
-    public void sendMsgToClient(ClientHandler from, String nickTo,
-                                             String msg) {
-        for (Map.Entry<String, ClientHandler> o : clients.entrySet()) {
-            if (o.getValue().getNick().equals(nickTo)) {
-                o.getValue().sendMessage("Получено сообщение от " + from.getNick() + ": " + msg);
-                from.sendMessage("Сообщение отправлено клиенту " + nickTo + ": " + msg);
-                return;
-            }
+    public void sendMsgToClient(ClientHandler sender, String to, String message) {
+        ClientHandler receiver = clients.get(to);
+        if (receiver != null) {
+            receiver .sendMessage("от " + sender.getNick() + ": " + message);
+            sender.sendMessage("участнику " + to + ": " + message);
+        } else {
+            sender.sendMessage(Command.ERROR, "Участника с ником " + to + "нет в чате");
         }
-        from.sendMessage("Участника с ником " + nickTo + " нет в чат-комнате");
     }
 
 
@@ -47,10 +48,25 @@ public class ChatServer {
 
     public void subscribe(ClientHandler client) {
         clients.put(client.getNick(), client);
+        broadcastClientList();
     }
 
     public void unsubscribe(ClientHandler client) {
         clients.remove(client.getNick());
+        broadcastClientList();
+    }
+
+    private void broadcastClientList() {
+        String nicks = clients.values().stream()
+                .map(ClientHandler::getNick)
+                .collect(Collectors.joining(" "));
+        broadcast(Command.CLIENTS, nicks.trim());
+    }
+
+    private void broadcast(Command command, String nicks) {
+        for (ClientHandler client : clients.values()) {
+            client.sendMessage(command, nicks);
+        }
     }
 
     public void broadcast(String msg) {
