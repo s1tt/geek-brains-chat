@@ -12,17 +12,14 @@ import java.util.stream.Collectors;
 public class ChatServer {
 
     private final Map<String, ClientHandler> clients;
-    private DbAuthService authService;
 
     public ChatServer() {
         this.clients = new HashMap<>();
     }
 
-    public void run() {
-        this.authService = new DbAuthService();
-        DbAuthService.connect();
-        DbAuthService.createFirstTable();
-        try (ServerSocket serverSocket = new ServerSocket(8189)) {
+    public void run() throws IOException {
+        try (ServerSocket serverSocket = new ServerSocket(8189);
+             AuthService authService = new DbAuthService()) {
             while (true) {
                 System.out.println("Wait client connection...");
                 final Socket socket = serverSocket.accept();
@@ -31,21 +28,18 @@ public class ChatServer {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            DbAuthService.disconnect();
         }
     }
 
     public void sendMsgToClient(ClientHandler sender, String to, String message) {
         ClientHandler receiver = clients.get(to);
         if (receiver != null) {
-            receiver .sendMessage("от " + sender.getNick() + ": " + message);
+            receiver.sendMessage("от " + sender.getNick() + ": " + message);
             sender.sendMessage("участнику " + to + ": " + message);
         } else {
             sender.sendMessage(Command.ERROR, "Участника с ником " + to + "нет в чате");
         }
     }
-
 
     public boolean isNickBusy(String nick) {
         return clients.containsKey(nick);
