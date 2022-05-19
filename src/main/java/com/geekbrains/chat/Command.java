@@ -1,5 +1,6 @@
 package com.geekbrains.chat;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -71,17 +72,17 @@ public enum Command {
         return params;
     }
 
-    public static Command getCommand (String message) {
+    public static Command getCommand (String message) throws IOException {
         message = message.trim();
         if (!isCommand(message)) {
-            throw new RuntimeException("'" + message + "' is not command");
+            throw new IOException("'" + message + "' is not command");
         }
         int index = message.indexOf(" ");
         String cmd = index > 0 ? message.substring(0, index) : message;
 
         Command command = map.get(cmd);
         if (command == null) {
-            throw new RuntimeException("'" + cmd + "' unknown command");
+            throw new IOException("'" + cmd + "' unknown command");
         }
         return command;
     }

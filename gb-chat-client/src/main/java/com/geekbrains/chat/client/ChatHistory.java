@@ -1,7 +1,6 @@
 package com.geekbrains.chat.client;
 
 import com.geekbrains.chat.Command;
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,7 +22,6 @@ public class ChatHistory {
 
     public String loadHistory() {
         File file = new File("gb-chat-client/chatHistory.txt");
-
         int lines = 100;
         int readLines = 0;
         StringBuilder builder = new StringBuilder();
@@ -46,7 +44,7 @@ public class ChatHistory {
             String historyLog = new String(builder.toString().getBytes("ISO-8859-1"), "UTF-8");
             return historyLog.trim();
         } catch (IOException e) {
-            System.out.println("Файл истории не найден. Создаем новый!");
+            System.out.println("History file not found. We created a new one!");
         } finally {
             if (randomAccessFile != null) {
                 try {

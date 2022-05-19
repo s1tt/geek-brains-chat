@@ -1,6 +1,8 @@
 package com.geekbrains.chat.server;
 
 import com.geekbrains.chat.Command;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -18,6 +20,7 @@ public class ClientHandler {
     private final AuthService authService;
 
     private String nick;
+    private static final Logger LOGGER = LogManager.getLogger(ClientHandler.class);
 
     public ClientHandler(Socket socket, ChatServer server, AuthService authService) {
         try {
@@ -27,7 +30,7 @@ public class ClientHandler {
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
             this.authService = authService;
-            ExecutorService executorService = Executors.newCachedThreadPool();
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
             executorService.execute(() -> {
                 try {
                     authenticate();
@@ -35,10 +38,11 @@ public class ClientHandler {
                 } finally {
                     closeConnection();
                 }
-                    });
+            });
             executorService.shutdown();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.fatal(e);
+            throw new RuntimeException();
         }
     }
 
@@ -49,14 +53,14 @@ public class ClientHandler {
                 in.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         try {
             if (out != null) {
                 out.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         try {
             if (socket != null) {
@@ -64,7 +68,7 @@ public class ClientHandler {
                 socket.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 
@@ -81,24 +85,23 @@ public class ClientHandler {
                         final String nick = authService.getNickByLoginAndPassword(login, password);
                         if (nick != null) {
                             if (server.isNickBusy(nick)) {
-                                sendMessage(Command.ERROR, "Пользователь уже авторизован");
+                                sendMessage(Command.ERROR, "The user is already logged in");
                                 continue;
                             }
                             sendMessage(Command.AUTHOK, nick);
                             this.nick = nick;
-                            server.broadcast("Пользователь " + nick + " зашел в чат");
+                            server.broadcast("The user " + nick + " has entered to the chat");
                             server.subscribe(this);
                             break;
                         } else {
-                            sendMessage(Command.ERROR, "Неверные логин и пароль");
+                            sendMessage(Command.ERROR, "Invalid username or password");
                         }
                     }
                 }
             } catch (IOException | SQLException e) {
-                e.printStackTrace();
+                LOGGER.error(e);
                 break;
             }
-
         }
     }
 
@@ -108,10 +111,10 @@ public class ClientHandler {
 
     public void sendMessage(String message) {
         try {
-            System.out.println("SERVER: Send message to " + nick);
+            LOGGER.debug("SERVER: Send message: " + message);
             out.writeUTF(message);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 
@@ -119,25 +122,24 @@ public class ClientHandler {
         try {
             while (true) {
                 final String msg = in.readUTF();
-                System.out.println("Receive message: " + msg);
-                    if (Command.isCommand(msg)) {
-                        Command command = Command.getCommand(msg);
-                        String[] params = command.parse(msg);
-                        if (command == Command.END) {
-                            server.broadcast(nick + ": покинул чат");
-                            break;
-                        }
-                        if (command == Command.PRIVATE_MESSAGE) {
-                            server.sendMsgToClient(this, params[0], params[1]);
-                            continue;
-                        }
+                LOGGER.debug("Receive message: " + msg);
+                if (Command.isCommand(msg)) {
+                    Command command = Command.getCommand(msg);
+                    String[] params = command.parse(msg);
+                    if (command == Command.END) {
+                        server.broadcast(nick + ": left the chat");
+                        break;
                     }
+                    if (command == Command.PRIVATE_MESSAGE) {
+                        server.sendMsgToClient(this, params[0], params[1]);
+                        continue;
+                    }
+                }
                 server.broadcast(nick + ": " + msg);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
-
     }
 
     public String getNick() {

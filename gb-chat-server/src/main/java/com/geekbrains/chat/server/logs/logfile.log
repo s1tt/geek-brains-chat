@@ -1,0 +1,14 @@
+INFO  2022-05-19 07:03:57 [main] com.geekbrains.chat.server.ChatServer (ChatServer.java:26) - Server has been started
+INFO  2022-05-19 07:03:57 [main] com.geekbrains.chat.server.ChatServer (ChatServer.java:28) - Wait client connection...
+INFO  2022-05-19 07:04:02 [main] com.geekbrains.chat.server.ChatServer (ChatServer.java:31) - Client connected
+INFO  2022-05-19 07:04:02 [main] com.geekbrains.chat.server.ChatServer (ChatServer.java:28) - Wait client connection...
+DEBUG 2022-05-19 07:04:09 [pool-2-thread-1] com.geekbrains.chat.server.ClientHandler (ClientHandler.java:114) - SERVER: Send message: /authok Alex
+INFO  2022-05-19 07:04:09 [pool-2-thread-1] com.geekbrains.chat.server.ChatServer (ChatServer.java:76) - The user Alex has entered to the chat
+DEBUG 2022-05-19 07:04:09 [pool-2-thread-1] com.geekbrains.chat.server.ClientHandler (ClientHandler.java:114) - SERVER: Send message: /clients Alex
+INFO  2022-05-19 07:04:13 [pool-2-thread-1] com.geekbrains.chat.server.ClientHandler (ClientHandler.java:125) - Receive message: Привет!
+INFO  2022-05-19 07:04:13 [pool-2-thread-1] com.geekbrains.chat.server.ChatServer (ChatServer.java:76) - Alex: Привет!
+DEBUG 2022-05-19 07:04:13 [pool-2-thread-1] com.geekbrains.chat.server.ClientHandler (ClientHandler.java:114) - SERVER: Send message: Alex: Привет!
+INFO  2022-05-19 07:04:16 [pool-2-thread-1] com.geekbrains.chat.server.ClientHandler (ClientHandler.java:125) - Receive message: /end
+INFO  2022-05-19 07:04:16 [pool-2-thread-1] com.geekbrains.chat.server.ChatServer (ChatServer.java:76) - Alex: left the chat
+DEBUG 2022-05-19 07:04:16 [pool-2-thread-1] com.geekbrains.chat.server.ClientHandler (ClientHandler.java:114) - SERVER: Send message: Alex: left the chat
+DEBUG 2022-05-19 07:04:16 [pool-2-thread-1] com.geekbrains.chat.server.ClientHandler (ClientHandler.java:114) - SERVER: Send message: /end 
