@@ -12,14 +12,17 @@ import java.util.stream.Collectors;
 public class ChatServer {
 
     private final Map<String, ClientHandler> clients;
+    private DbAuthService authService;
 
     public ChatServer() {
         this.clients = new HashMap<>();
     }
 
     public void run() {
-        try (ServerSocket serverSocket = new ServerSocket(8189);
-             AuthService authService = new InMemoryAuthService()) {
+        this.authService = new DbAuthService();
+        DbAuthService.connect();
+        DbAuthService.createFirstTable();
+        try (ServerSocket serverSocket = new ServerSocket(8189)) {
             while (true) {
                 System.out.println("Wait client connection...");
                 final Socket socket = serverSocket.accept();
@@ -28,6 +31,8 @@ public class ChatServer {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            DbAuthService.disconnect();
         }
     }
 

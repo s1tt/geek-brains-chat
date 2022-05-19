@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.SQLException;
 
 public class ClientHandler {
     private final Socket socket;
@@ -92,7 +93,7 @@ public class ClientHandler {
                         }
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException | SQLException e) {
                 e.printStackTrace();
                 break;
             }
@@ -125,7 +126,6 @@ public class ClientHandler {
                             server.broadcast(nick + ": покинул чат");
                             break;
                         }
-
                         if (command == Command.PRIVATE_MESSAGE) {
                             server.sendMsgToClient(this, params[0], params[1]);
                             continue;
