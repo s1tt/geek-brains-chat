@@ -2,7 +2,6 @@ package com.geekbrains.chat.client;
 
 import com.geekbrains.chat.Command;
 import javafx.application.Platform;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -15,7 +14,6 @@ public class ChatClient {
     private DataInputStream in;
     private DataOutputStream out;
     private Thread timerThread;
-
     private final Controller controller;
     private ChatHistory chatHistory;
 
@@ -24,11 +22,11 @@ public class ChatClient {
         timerThread = new Thread(() -> {
             try {
                 Thread.sleep(120000);
-                System.out.println("Время авторизации вышло");
+                System.out.println("Authorization time out");
                 Platform.exit();
                 sendMessage(Command.END);
             } catch (InterruptedException e) {
-                System.out.println("Успешная авторизация");
+                System.out.println("Successful authorization");
             }
         });
         timerThread.start();
@@ -51,7 +49,6 @@ public class ChatClient {
         });
         readThread.setDaemon(true);
         readThread.start();
-
     }
 
     private void readMessage() throws IOException {
@@ -89,7 +86,7 @@ public class ChatClient {
                     timerThread.interrupt();
                     final String nick = params[0];
                     controller.addMessage(chatHistory.loadHistory());
-                    controller.addMessage("Успешная авторизация под ником " + nick);
+                    controller.addMessage(nick + ", you have successfully logged in.");
                     controller.setAuth(true);
                     break;
                 }

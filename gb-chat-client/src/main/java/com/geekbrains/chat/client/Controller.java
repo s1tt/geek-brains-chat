@@ -3,7 +3,6 @@ package com.geekbrains.chat.client;
 import java.util.Optional;
 
 import com.geekbrains.chat.Command;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -66,11 +65,11 @@ public class Controller {
 
     private void showNotification() {
         final Alert alert = new Alert(Alert.AlertType.ERROR,
-                "Не могу подключится к серверу.\n" +
-                        "Проверьте, что сервер запущен",
-                new ButtonType("Попробовать еще", ButtonBar.ButtonData.OK_DONE),
-                new ButtonType("Выйти", ButtonBar.ButtonData.CANCEL_CLOSE));
-        alert.setTitle("Ошибка подключения");
+                "Unable to connect to the server.\n" +
+                        "Check if the server is running",
+                new ButtonType("Try again", ButtonBar.ButtonData.OK_DONE),
+                new ButtonType("Exit", ButtonBar.ButtonData.CANCEL_CLOSE));
+        alert.setTitle("Connection error");
         final Optional<ButtonType> buttonType = alert.showAndWait();
         final Boolean isExit = buttonType.map(btn -> btn.getButtonData().isCancelButton()).orElse(false);
         if (isExit) {
@@ -80,7 +79,7 @@ public class Controller {
 
     public void showError(String[] error) {
         Alert alert = new Alert(Alert.AlertType.ERROR, error[0], new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
-        alert.setTitle("Ошибка");
+        alert.setTitle("Error");
         alert.showAndWait();
     }
 

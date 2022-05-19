@@ -1,13 +1,15 @@
 package com.geekbrains.chat.server;
 
-import java.io.IOException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.sql.*;
 
 public class DbAuthService implements AuthService {
 
-    private static Connection connection;
-    private static PreparedStatement prStmt;
-    private static Statement stm;
+    private Connection connection;
+    private Statement stm;
+    private static final Logger LOGGER = LogManager.getLogger(DbAuthService.class);
 
     public DbAuthService() {
         run();
@@ -15,19 +17,7 @@ public class DbAuthService implements AuthService {
 
     @Override
     public String getNickByLoginAndPassword(String login, String password) {
-        try {
-            stm.executeUpdate("create table if not exists users (" +
-                    "id integer primary key autoincrement," +
-                    "login text not null," +
-                    "password text not null," +
-                    "nick text not null," +
-                    "unique (login, password, nick))");
-            stm.executeUpdate("insert or ignore into users (login, password, nick) " +
-                    "values ('admin1', '123', 'Alex'), " +
-                            "('admin2', '123', 'Bob'), " +
-                            "('admin3', '123', 'Max')");
-
-            prStmt = connection.prepareStatement("select nick from users where login = ? and password = ?");
+        try (PreparedStatement prStmt = connection.prepareStatement("select nick from users where login = ? and password = ?")) {
             prStmt.setString(1, login);
             prStmt.setString(2, password);
             try (ResultSet rs = prStmt.executeQuery()) {
@@ -36,7 +26,7 @@ public class DbAuthService implements AuthService {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         return null;
     }
@@ -47,34 +37,30 @@ public class DbAuthService implements AuthService {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:gb-chat-server/clients.db");
             stm = connection.createStatement();
+            stm.executeUpdate("create table if not exists users (" +
+                    "id integer primary key autoincrement," +
+                    "login text not null," +
+                    "password text not null," +
+                    "nick text not null," +
+                    "unique (login, password, nick))");
+            stm.executeUpdate("insert or ignore into users (login, password, nick) " +
+                    "values ('admin1', '123', 'Alex'), " +
+                    "('admin2', '123', 'Bob'), " +
+                    "('admin3', '123', 'Max')");
+            stm.close();
         } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Невозможно подключиться к БД");
+            LOGGER.fatal("Unable to connect to DB", e);
         }
     }
 
     @Override
-    public void close() throws IOException {
-        try {
-            if (stm != null) {
-                stm.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        try {
-            if (prStmt != null) {
-                prStmt.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void close() {
         try {
             if (connection != null) {
                 connection.close();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.error("Error closing database connection", e);
         }
     }
 }
