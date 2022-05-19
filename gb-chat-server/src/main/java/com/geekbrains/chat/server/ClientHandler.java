@@ -7,6 +7,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
     private final Socket socket;
@@ -25,20 +27,19 @@ public class ClientHandler {
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
             this.authService = authService;
-
-            new Thread(() -> {
+            ExecutorService executorService = Executors.newCachedThreadPool();
+            executorService.execute(() -> {
                 try {
                     authenticate();
                     readMessages();
                 } finally {
                     closeConnection();
                 }
-            }).start();
-
+                    });
+            executorService.shutdown();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     private void closeConnection() {
