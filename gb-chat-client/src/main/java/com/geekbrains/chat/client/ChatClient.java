@@ -17,6 +17,7 @@ public class ChatClient {
     private Thread timerThread;
 
     private final Controller controller;
+    private ChatHistory chatHistory;
 
     public ChatClient(Controller controller) {
         this.controller = controller;
@@ -37,6 +38,7 @@ public class ChatClient {
         socket = new Socket("localhost", 8189);
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
+        chatHistory = new ChatHistory();
         final Thread readThread = new Thread(() -> {
             try {
                 waitAuthenticate();
@@ -73,6 +75,7 @@ public class ChatClient {
                 }
             }
             controller.addMessage(message);
+            chatHistory.saveHistory(message);
         }
     }
 
@@ -85,6 +88,7 @@ public class ChatClient {
                 if (command == Command.AUTHOK) {
                     timerThread.interrupt();
                     final String nick = params[0];
+                    controller.addMessage(chatHistory.loadHistory());
                     controller.addMessage("Успешная авторизация под ником " + nick);
                     controller.setAuth(true);
                     break;

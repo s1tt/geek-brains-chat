@@ -5,14 +5,44 @@ import java.sql.*;
 
 public class DbAuthService implements AuthService {
 
-
-
     private static Connection connection;
     private static PreparedStatement prStmt;
     private static Statement stm;
 
+    public DbAuthService() {
+        run();
+    }
 
-    public static void connect() {
+    @Override
+    public String getNickByLoginAndPassword(String login, String password) {
+        try {
+            stm.executeUpdate("create table if not exists users (" +
+                    "id integer primary key autoincrement," +
+                    "login text not null," +
+                    "password text not null," +
+                    "nick text not null," +
+                    "unique (login, password, nick))");
+            stm.executeUpdate("insert or ignore into users (login, password, nick) " +
+                    "values ('admin1', '123', 'Alex'), " +
+                            "('admin2', '123', 'Bob'), " +
+                            "('admin3', '123', 'Max')");
+
+            prStmt = connection.prepareStatement("select nick from users where login = ? and password = ?");
+            prStmt.setString(1, login);
+            prStmt.setString(2, password);
+            try (ResultSet rs = prStmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void run() {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:gb-chat-server/clients.db");
@@ -23,7 +53,8 @@ public class DbAuthService implements AuthService {
         }
     }
 
-    public static void disconnect() {
+    @Override
+    public void close() throws IOException {
         try {
             if (stm != null) {
                 stm.close();
@@ -45,46 +76,5 @@ public class DbAuthService implements AuthService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void createFirstTable() {
-        try {
-            stm.executeUpdate("create table if not exists users (" +
-                    "id integer primary key autoincrement," +
-                    "login text not null," +
-                    "password text not null," +
-                    "nick text not null," +
-                    "unique (login, password, nick))");
-            stm.executeUpdate("insert or ignore into users (login, password, nick) values ('admin1', '123', 'Alex'), ('admin2', '123', 'Bob'), ('admin3', '123', 'Max')");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public String getNickByLoginAndPassword(String login, String password) {
-        try {
-            prStmt = connection.prepareStatement("select nick from users where login = ? and password = ?");
-            prStmt.setString(1, login);
-            prStmt.setString(2, password);
-            try (ResultSet rs = prStmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString(1);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    @Override
-    public void run() {
-        System.out.println("AuthService run");
-    }
-
-    @Override
-    public void close() throws IOException {
-        System.out.println("AuthService closed");
     }
 }
